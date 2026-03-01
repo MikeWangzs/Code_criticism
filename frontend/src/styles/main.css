@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  margin: 0;
+  font-family: 'PingFang SC', 'Helvetica Neue', sans-serif;
+  background: radial-gradient(circle at top right, rgba(0, 212, 170, 0.12), transparent 45%), #f7fafc;
+}
+
+.card {
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+}
+
+.badge {
+  border-radius: 999px;
+  padding: 0.2rem 0.7rem;
+  font-size: 12px;
+  font-weight: 600;
+}
