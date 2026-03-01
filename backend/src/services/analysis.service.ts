@@ -3,6 +3,7 @@ import { getFile } from './file.service.js';
 import { taskStore } from '../data/store.js';
 import type { AnalysisResult, AnalysisStep, AnalysisTask, Issue, Suggestion } from '../models/types.js';
 import { publishTaskProgress } from './ws.service.js';
+import { runAICritic } from './ai-critic.service.js';
 
 function buildSteps(): AnalysisStep[] {
   return [
@@ -99,7 +100,7 @@ function calculateScore(issues: Issue[], complexity: number) {
   return Math.max(0, Math.min(100, 100 - penalties - Math.floor(Math.max(0, complexity - 10) * 1.5)));
 }
 
-function generateResult(code: string, language: string): AnalysisResult {
+function generateResult(code: string, language: string, aiAnalysisResult: any = null): AnalysisResult {
   const lines = code.split('\n');
   const issues = staticScan(code);
   const complexity = estimateComplexity(code);
@@ -120,6 +121,7 @@ function generateResult(code: string, language: string): AnalysisResult {
     metrics,
     issues,
     suggestions: buildSuggestions(language),
+    aiAnalysis: aiAnalysisResult,
     generatedAt: new Date().toISOString(),
   };
 }
@@ -170,6 +172,8 @@ async function runTask(taskId: string) {
   task.status = 'processing';
   task.updatedAt = new Date().toISOString();
 
+  let aiAnalysisResult: any = null;
+
   for (let i = 0; i < task.steps.length; i += 1) {
     const current = task.steps[i];
     current.status = 'processing';
@@ -182,7 +186,24 @@ async function runTask(taskId: string) {
       message: `正在执行 ${current.name}...`,
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    if (current.name === 'ai_analysis') {
+      console.log('=== 开始AI分析步骤 ===');
+      console.log('文件内容长度:', file.content.length);
+      console.log('文件语言:', task.language);
+      try {
+        aiAnalysisResult = await runAICritic({
+          code: file.content,
+          language: task.language,
+        });
+        console.log('AI分析成功完成');
+        console.log('AI结果:', JSON.stringify(aiAnalysisResult, null, 2));
+      } catch (error) {
+        console.error('AI分析失败:', error);
+        aiAnalysisResult = null;
+      }
+    } else {
+      await new Promise((resolve) => setTimeout(resolve, 600));
+    }
 
     current.status = 'completed';
     current.progress = 100;
@@ -196,7 +217,7 @@ async function runTask(taskId: string) {
     });
   }
 
-  task.result = generateResult(file.content, task.language);
+  task.result = generateResult(file.content, task.language, aiAnalysisResult);
   task.status = 'completed';
   task.currentStep = 'generate_report';
   task.progress = 100;

@@ -38,12 +38,31 @@ export interface CodeMetrics {
   duplicateCodeRatio?: number;
 }
 
+export interface AIIssue {
+  id: string;
+  level: 'fatal' | 'major' | 'minor';
+  title: string;
+  lineHint?: string;
+  roast: string;
+  fix: string;
+}
+
+export interface AIAnalysisResult {
+  model: string;
+  strictScore: number;
+  summary: string;
+  openingRoast: string;
+  issues: AIIssue[];
+  finalVerdict: string;
+}
+
 export interface AnalysisResult {
   score: number;
   summary: string;
   metrics: CodeMetrics;
   issues: Issue[];
   suggestions: Suggestion[];
+  aiAnalysis?: AIAnalysisResult;
   generatedAt: string;
 }
 

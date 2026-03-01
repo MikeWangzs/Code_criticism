@@ -52,7 +52,14 @@ function normalizeResult(raw: any, model: string): AICriticResult {
 }
 
 export async function runAICritic(args: { code: string; language?: string }) {
+  console.log('=== 开始AI分析 ===');
+  console.log('代码长度:', args.code?.length);
+  console.log('语言:', args.language);
+  
   const apiKey = process.env.AI_API_KEY;
+  console.log('API Key 存在:', !!apiKey);
+  console.log('API Key 长度:', apiKey?.length);
+  
   if (!apiKey) {
     throw new Error('缺少 AI_API_KEY，请先配置环境变量');
   }
@@ -60,6 +67,9 @@ export async function runAICritic(args: { code: string; language?: string }) {
   const model = process.env.AI_MODEL ?? 'sfm_codingplan_public_cn-m1e4oev5j4n';
   const baseUrl = process.env.AI_BASE_URL ?? 'https://api.siliconflow.cn/v1';
   const language = args.language || 'unknown';
+
+  console.log('使用模型:', model);
+  console.log('API Base URL:', baseUrl);
 
   const systemPrompt = [
     '你是顶级代码审查专家，风格是“幽默但严格”。',
@@ -83,6 +93,9 @@ export async function runAICritic(args: { code: string; language?: string }) {
 
   const userPrompt = `语言: ${language}\n\n请批判以下代码:\n\n${args.code}`;
 
+  console.log('准备发送请求...');
+  console.log('请求URL:', `${baseUrl.replace(/\/$/, '')}/chat/completions`);
+
   const response = await fetch(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
     method: 'POST',
     headers: {
@@ -99,9 +112,14 @@ export async function runAICritic(args: { code: string; language?: string }) {
     }),
   });
 
+  console.log('响应状态:', response.status, response.statusText);
+  
   const payload = await response.json();
+  console.log('响应数据:', JSON.stringify(payload, null, 2));
+  
   if (!response.ok) {
     const detail = payload?.error?.message || payload?.message || JSON.stringify(payload) || 'AI 请求失败';
+    console.error('AI请求失败详情:', detail);
     throw new Error(`AI 调用失败(${response.status}): ${detail}`);
   }
 

@@ -92,6 +92,68 @@ async function createShareLink() {
       </div>
     </header>
 
+    <section v-if="store.result.aiAnalysis" class="card p-6 bg-gradient-to-br from-purple-50 to-pink-50">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="h-8 w-8 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+          <span class="text-white text-sm">AI</span>
+        </div>
+        <h2 class="text-xl font-bold text-slate-800">AI 智能评判</h2>
+        <span class="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded-full">{{ store.result.aiAnalysis.model }}</span>
+      </div>
+
+      <div class="mb-6 p-4 bg-white rounded-lg border border-purple-200">
+        <p class="text-lg text-slate-700 italic">"{{ store.result.aiAnalysis.openingRoast }}"</p>
+      </div>
+
+      <div class="mb-6 flex items-center gap-4">
+        <div class="flex-1">
+          <p class="text-sm text-slate-500 mb-1">AI 严格评分</p>
+          <div class="flex items-center gap-2">
+            <div class="flex-1 h-3 bg-slate-200 rounded-full overflow-hidden">
+              <div class="h-full bg-gradient-to-r from-purple-500 to-pink-500 transition-all" :style="{ width: `${store.result.aiAnalysis.strictScore}%` }"></div>
+            </div>
+            <span class="text-lg font-bold text-purple-600">{{ store.result.aiAnalysis.strictScore }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mb-6">
+        <h3 class="font-semibold text-slate-800 mb-3">AI 评价摘要</h3>
+        <p class="text-slate-700">{{ store.result.aiAnalysis.summary }}</p>
+      </div>
+
+      <div v-if="store.result.aiAnalysis.issues.length > 0" class="mb-6">
+        <h3 class="font-semibold text-slate-800 mb-3">AI 发现的问题 ({{ store.result.aiAnalysis.issues.length }})</h3>
+        <div class="space-y-3">
+          <article v-for="issue in store.result.aiAnalysis.issues" :key="issue.id" class="rounded-lg border-l-4 bg-white p-4"
+            :class="issue.level === 'fatal' ? 'border-red-500' : issue.level === 'major' ? 'border-orange-500' : 'border-yellow-500'">
+            <div class="flex items-start justify-between gap-4">
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-2">
+                  <span class="text-xs font-semibold px-2 py-0.5 rounded"
+                    :class="issue.level === 'fatal' ? 'bg-red-100 text-red-700' : issue.level === 'major' ? 'bg-orange-100 text-orange-700' : 'bg-yellow-100 text-yellow-700'">
+                    {{ issue.level.toUpperCase() }}
+                  </span>
+                  <h4 class="font-semibold text-slate-800">{{ issue.title }}</h4>
+                </div>
+                <p v-if="issue.lineHint" class="text-sm text-slate-500 mb-2">位置: {{ issue.lineHint }}</p>
+                <p class="text-slate-700 mb-2">{{ issue.roast }}</p>
+                <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+                  <p class="text-sm font-medium text-emerald-800 mb-1">修复建议:</p>
+                  <p class="text-sm text-emerald-700">{{ issue.fix }}</p>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+
+      <div class="p-4 bg-gradient-to-r from-purple-100 to-pink-100 rounded-lg border border-purple-300">
+        <h3 class="font-semibold text-slate-800 mb-2">最终裁决</h3>
+        <p class="text-slate-700">{{ store.result.aiAnalysis.finalVerdict }}</p>
+      </div>
+    </section>
+
     <section class="card p-6">
       <div class="mb-4 flex gap-2">
         <button v-for="item in ['all', 'error', 'warning', 'info']" :key="item" class="rounded-full px-3 py-1 text-sm"

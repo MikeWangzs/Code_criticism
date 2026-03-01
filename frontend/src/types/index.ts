@@ -33,6 +33,24 @@ export interface Issue {
   suggestion?: string;
 }
 
+export interface AIIssue {
+  id: string;
+  level: 'fatal' | 'major' | 'minor';
+  title: string;
+  lineHint?: string;
+  roast: string;
+  fix: string;
+}
+
+export interface AIAnalysisResult {
+  model: string;
+  strictScore: number;
+  summary: string;
+  openingRoast: string;
+  issues: AIIssue[];
+  finalVerdict: string;
+}
+
 export interface AnalysisResult {
   score: number;
   summary: string;
@@ -44,5 +62,6 @@ export interface AnalysisResult {
   };
   issues: Issue[];
   suggestions: Array<{ id: string; title: string; description: string; priority: string }>;
+  aiAnalysis?: AIAnalysisResult;
   generatedAt: string;
 }
