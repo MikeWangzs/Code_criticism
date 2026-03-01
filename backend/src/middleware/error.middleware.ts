@@ -6,6 +6,6 @@ export function notFound(_req: Request, res: Response) {
 }
 
 export function errorHandler(error: Error, _req: Request, res: Response, _next: NextFunction) {
-  const status = error.message.includes('超过限制') ? 413 : 400;
+  const status = error.message.includes('超过限制') ? 413 : error.message.includes('AI 调用失败') ? 502 : 400;
   res.status(status).json(fail(status, error.message));
 }

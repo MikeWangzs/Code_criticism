@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import http from 'node:http';
 import { createApp } from './app.js';
 import { initWsServer } from './services/ws.service.js';

@@ -34,6 +34,7 @@ Base URL: `http://localhost:3000/api/v1`
 - `POST /upload` 文件上传
 - `POST /upload/text` 文本上传
 - `POST /analysis` 创建分析任务
+- `POST /analysis/ai-critic` 使用 AI 模型进行“幽默且严格”的代码批判（传 `code` 或 `fileId`）
 - `GET /analysis/:taskId/status` 查询进度
 - `GET /analysis/:taskId/result` 获取结果
 - `POST /report/:taskId/export` 导出报告（markdown/json/pdf）
@@ -42,6 +43,16 @@ Base URL: `http://localhost:3000/api/v1`
 - `POST /languages/detect` 语言检测
 - `GET /health` 健康检查
 - `GET /config` 系统配置
+
+### AI 配置（OpenAI 兼容）
+
+在 `backend/.env` 配置：
+
+```bash
+AI_BASE_URL=https://api.siliconflow.cn/v1
+AI_API_KEY=your_ai_api_key
+AI_MODEL=sfm_codingplan_public_cn-m1e4oev5j4n
+```
 
 ## Docker 部署
 
@@ -58,4 +69,3 @@ docker-compose up -d --build
 ```bash
 git remote set-url origin https://github.com/MikeWangzs/Code_criticism.git
 ```
-
