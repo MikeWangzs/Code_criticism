@@ -12,6 +12,25 @@ export function toMarkdown(task: AnalysisTask) {
     .map((item) => `- ${item.title}: ${item.description}`)
     .join('\n');
 
+  const aiSummaryRows = result.aiAnalysis
+    ? [
+        `- 模型: ${result.aiAnalysis.model}`,
+        `- 严格评分: ${result.aiAnalysis.strictScore}/100`,
+        `- 总结: ${result.aiAnalysis.summary}`,
+      ].join('\n')
+    : '- 本次未生成 AI 评价';
+
+  const aiIssueRows = result.aiAnalysis
+    ? result.aiAnalysis.issues
+        .map(
+          (issue, index) =>
+            `${index + 1}. [${issue.level.toUpperCase()}] ${issue.title}${issue.lineHint ? ` (${issue.lineHint})` : ''}\n   - 吐槽: ${issue.roast}\n   - 修复: ${issue.fix}`,
+        )
+        .join('\n')
+    : '- 无';
+
+  const aiVerdictRows = result.aiAnalysis ? result.aiAnalysis.finalVerdict : '- 无';
+
   return [
     `# 代码分析报告 - ${task.fileName}`,
     '',
@@ -33,6 +52,17 @@ export function toMarkdown(task: AnalysisTask) {
     '',
     '## 改进建议',
     suggestRows || '- 无',
+    '',
+    '## AI 评价',
+    aiSummaryRows,
+    '',
+    result.aiAnalysis ? `> ${result.aiAnalysis.openingRoast}` : '> 无',
+    '',
+    '## AI 发现的问题',
+    aiIssueRows,
+    '',
+    '## AI 最终裁决',
+    aiVerdictRows,
     '',
   ].join('\n');
 }

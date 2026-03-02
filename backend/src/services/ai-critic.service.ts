@@ -39,7 +39,7 @@ function normalizeResult(raw: any, model: string): AICriticResult {
     strictScore: Number(raw?.strictScore ?? 0),
     summary: String(raw?.summary ?? '未返回总结'),
     openingRoast: String(raw?.openingRoast ?? '这段代码让我想给编译器发心理援助。'),
-    issues: issues.slice(0, 20).map((item: any) => ({
+    issues: issues.slice(0, 40).map((item: any) => ({
       id: uuidv4(),
       level: ['fatal', 'major', 'minor'].includes(item?.level) ? item.level : 'major',
       title: String(item?.title ?? '问题描述缺失'),
@@ -52,14 +52,7 @@ function normalizeResult(raw: any, model: string): AICriticResult {
 }
 
 export async function runAICritic(args: { code: string; language?: string }) {
-  console.log('=== 开始AI分析 ===');
-  console.log('代码长度:', args.code?.length);
-  console.log('语言:', args.language);
-  
   const apiKey = process.env.AI_API_KEY;
-  console.log('API Key 存在:', !!apiKey);
-  console.log('API Key 长度:', apiKey?.length);
-  
   if (!apiKey) {
     throw new Error('缺少 AI_API_KEY，请先配置环境变量');
   }
@@ -68,17 +61,16 @@ export async function runAICritic(args: { code: string; language?: string }) {
   const baseUrl = process.env.AI_BASE_URL ?? 'https://api.siliconflow.cn/v1';
   const language = args.language || 'unknown';
 
-  console.log('使用模型:', model);
-  console.log('API Base URL:', baseUrl);
-
   const systemPrompt = [
-    '你是顶级代码审查专家，风格是“幽默但严格”。',
-    '目标：像严格 code reviewer 一样找问题，同时保留机智吐槽。',
+    '你是毒舌级代码审查专家，风格是“幽默、锋利、严格”。',
+    '目标：像最挑剔的 staff engineer 一样找问题，同时保持专业可执行。',
     '约束：',
-    '1) 批评必须专业、具体、可执行，不做人身攻击。',
+    '1) 允许语言犀利、讽刺，但不得侮辱人格，不得歧视。',
     '2) 优先指出正确性、安全性、并发、性能、可维护性问题。',
-    '3) 给出可落地修复建议。',
-    '4) 输出必须是 JSON，不要 markdown，不要额外解释。',
+    '3) 每个问题都要给明确修复动作，必要时给重构方向。',
+    '4) 问题数量不少于 12 条；代码较差时可输出 15-25 条。',
+    '5) 对同一问题从不同维度拆分，不要用笼统描述凑数。',
+    '6) 输出必须是 JSON，不要 markdown，不要额外解释。',
     'JSON 结构：',
     '{',
     '  "strictScore": 0-100,',
@@ -91,10 +83,16 @@ export async function runAICritic(args: { code: string; language?: string }) {
     '}',
   ].join('\n');
 
-  const userPrompt = `语言: ${language}\n\n请批判以下代码:\n\n${args.code}`;
+  const userPrompt = `语言: ${language}
 
-  console.log('准备发送请求...');
-  console.log('请求URL:', `${baseUrl.replace(/\/$/, '')}/chat/completions`);
+要求：
+- 语气更锋利，批判更密集。
+- 严格逐条指出风险与坏味道。
+- 给出直接可执行的修复建议。
+
+请批判以下代码:
+
+${args.code}`;
 
   const response = await fetch(`${baseUrl.replace(/\/$/, '')}/chat/completions`, {
     method: 'POST',
@@ -104,7 +102,7 @@ export async function runAICritic(args: { code: string; language?: string }) {
     },
     body: JSON.stringify({
       model,
-      temperature: 0.7,
+      temperature: 0.95,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
@@ -112,14 +110,9 @@ export async function runAICritic(args: { code: string; language?: string }) {
     }),
   });
 
-  console.log('响应状态:', response.status, response.statusText);
-  
   const payload = await response.json();
-  console.log('响应数据:', JSON.stringify(payload, null, 2));
-  
   if (!response.ok) {
     const detail = payload?.error?.message || payload?.message || JSON.stringify(payload) || 'AI 请求失败';
-    console.error('AI请求失败详情:', detail);
     throw new Error(`AI 调用失败(${response.status}): ${detail}`);
   }
 
